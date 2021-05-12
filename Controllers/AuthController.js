@@ -43,7 +43,7 @@ router.signUp = async (req, res) => {
         let user_uuid = await HELPERS.getKnexUuid(knex);
         let create_obj = {
             uuid: user_uuid,
-            first_name : inputs?.username,
+            first_name : inputs.username,
             username: inputs.username,
             email: inputs.email,
             password: MD5(inputs.password),
