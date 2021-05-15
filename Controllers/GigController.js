@@ -731,7 +731,7 @@ router.getGigPreview = async (req, res) => {
 
     let query = `SELECT gigs.title,gigs.gig_photo_1,gigs.id as gig_header_id,gigs.uuid as gig_header_uuid,gig_pricing.price,users.username,users.profile_image FROM gigs INNER JOIN gig_pricing on gigs.id = gig_pricing.gig_id
     INNER JOIN users on gigs.user_id = users.id
-    WHERE gig_pricing.status = 1 and gig_pricing.type = 'basic' and gigs.uuid = ${id}`
+    WHERE gig_pricing.status = 1 and gig_pricing.type = 'basic' and gigs.uuid = '${id}'`
 
     await knex.raw(query).then(response => {
         if (response[0]) {

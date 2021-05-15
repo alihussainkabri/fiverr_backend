@@ -29,8 +29,8 @@ router.fetchMessageNeeds = async (req, res) => {
             status = 200;
             message = 'Data fetch successfully!';
 
-            await knex('messages').where('reciever_uuid',req.user_data.uuid).where('chat_uuid', chat_list[i].chat_uuid).where('status', 1).where('message_status',0).then(response=>{
-                if (response){
+            await knex('messages').where('reciever_uuid', req.user_data.uuid).where('chat_uuid', chat_list[i].chat_uuid).where('status', 1).where('message_status', 0).then(response => {
+                if (response) {
                     chat_list[i]['unread_message'] = response.length;
                 }
             })
@@ -48,7 +48,8 @@ router.submitMessageModal = async (req, res) => {
     let inputs = req.body;
     let isCHAT = false;
 
-    let chat_uuid = ''
+    let chat_uuid = '';
+    let message_id = '';
 
     let query = `SELECT * FROM chats
     WHERE (person1_uuid = '${inputs.seller}' OR person2_uuid = '${inputs.seller}') and (person1_uuid = '${inputs.user}' OR person2_uuid = '${inputs.user}') and status = 1`;
@@ -77,24 +78,25 @@ router.submitMessageModal = async (req, res) => {
             created_at: HELPERS.datetime()
         }
 
-        await knex('messages').insert(message_insert).then(response => {
+        await knex('messages').insert(message_insert, 'id').then(response => {
             if (response) {
+                message_id = response[0];
                 status = 200;
                 message = 'Chat and message has been created successfully!'
             }
         }).catch(err => console.log(err))
 
-        await knex('chats').where('uuid',chat_uuid).update({
-            updated_at : HELPERS.datetime(),
-            updated_by : inputs.user_id
-        }).then(response=>{
-            if (response){
+        await knex('chats').where('uuid', chat_uuid).update({
+            updated_at: HELPERS.datetime(),
+            updated_by: inputs.user_id
+        }).then(response => {
+            if (response) {
                 status = 200;
                 message = 'Data fetch successfully!'
             }
         })
     } else {
-        chat_uuid=await HELPERS.getKnexUuid(knex);
+        chat_uuid = await HELPERS.getKnexUuid(knex);
         let insert_obj = {
             uuid: chat_uuid,
             person1_uuid: inputs.user, // send will be person1
@@ -104,6 +106,8 @@ router.submitMessageModal = async (req, res) => {
             status: 1,
             created_by: inputs.user_id,
             created_at: HELPERS.datetime(),
+            updated_by: inputs.user_id,
+            updated_at: HELPERS.datetime(),
         }
 
         await knex('chats').insert(insert_obj, 'uuid').then(response => {
@@ -125,23 +129,47 @@ router.submitMessageModal = async (req, res) => {
             created_at: HELPERS.datetime()
         }
 
-        await knex('messages').insert(message_insert).then(response => {
+        await knex('messages').insert(message_insert, 'id').then(response => {
             if (response) {
+                message_id = response[0];
                 status = 200;
                 message = 'Chat and message has been created successfully!'
             }
         }).catch(err => console.log(err))
     }
 
-    return res.json({status,message});
+    if (chat_uuid && message_id) {
+        let query = `SELECT messages.id,messages.uuid,messages.chat_uuid,messages.message,messages.attachements,messages.sender_uuid,messages.sender_name,messages.reciever_uuid,messages.reciever_name,messages.status,messages.created_by,messages.created_at,u1.profile_image as sender_image,u2.profile_image as reciever_image FROM messages 
+    INNER JOIN users u1 on u1.uuid = messages.sender_uuid
+    INNER JOIN users u2 on u2.uuid = messages.reciever_uuid
+    WHERE messages.chat_uuid = '${chat_uuid}' and messages.id = ${message_id} and messages.status = 1`;
+
+        await knex.raw(query).then(async response => {
+            if (response[0]) {
+                chat_messages = response[0];
+                console.log('chat_msg', chat_messages);
+                status = 200;
+                message = 'Data has been fetched successfully!'
+                await knex('users').where('uuid', inputs.seller).select('online_status').then(response => {
+                    if (response[0].online_status == 1) {
+                        socket.broadcast.emit('newMessageArrived', { chat_messages: chat_messages, chat_uuid: chat_uuid, sender_uuid: inputs.user })
+                        socket.emit('newMessageArrived', { chat_messages: chat_messages, chat_uuid: chat_uuid, sender_uuid: inputs.user })
+                    }
+                })
+
+            }
+        }).catch(err => console.log(err))
+    }
+
+    return res.json({ status, message });
 }
 
 
 // fetch messages based on chat uuid
-router.fetchMessagesChatUuid = async (req,res) => {
+router.fetchMessagesChatUuid = async (req, res) => {
     let status = 500;
     let message = 'Oops something went wrong!';
-    let {uuid} = req.params;
+    let { uuid } = req.params;
     let chat_messages = [];
 
     let query = `SELECT messages.id,messages.uuid,messages.chat_uuid,messages.message,messages.attachements,messages.attachement_name,messages.sender_uuid,messages.sender_name,messages.reciever_uuid,messages.reciever_name,messages.status,messages.created_by,messages.created_at,u1.profile_image as sender_image,u2.profile_image as reciever_image FROM messages 
@@ -149,14 +177,14 @@ router.fetchMessagesChatUuid = async (req,res) => {
     INNER JOIN users u2 on u2.uuid = messages.reciever_uuid
     WHERE messages.chat_uuid = '${uuid}' and messages.status = 1`;
 
-    await knex.raw(query).then(response=>{
-        if (response[0]){
+    await knex.raw(query).then(response => {
+        if (response[0]) {
             chat_messages = response[0];
             status = 200;
             message = 'Data has been fetched successfully!'
         }
-    }).catch(err=>console.log(err))
+    }).catch(err => console.log(err))
 
-    return res.json({status,message,chat_messages})
+    return res.json({ status, message, chat_messages })
 }
 module.exports = router;

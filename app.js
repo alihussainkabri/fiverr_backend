@@ -181,7 +181,6 @@ io.on('connection', (socket) => {
 app.post('/send-messsage', async (req, res) => {
     let data = req.body;
     let chat_id;
-    console.log(data);
     let chat_messages = [];
     await knex('messages').insert(
         {
@@ -208,12 +207,10 @@ app.post('/send-messsage', async (req, res) => {
             await knex.raw(query).then(async response => {
                 if (response[0]) {
                     chat_messages = response[0];
-                    console.log(chat_messages);
-                    console.log(chat_id);
+                    console.log('chat_msg',chat_messages);
                     status = 200;
                     message = 'Data has been fetched successfully!'
                     await knex('users').where('uuid', data.reciver_uuid).select('online_status').then(response => {
-                        console.log(response)
                         if (response[0].online_status == 1) {
                             socket.broadcast.emit('newMessageArrived', { chat_messages: chat_messages, chat_uuid: data.chat_uuid, sender_uuid: data.sender_uuid })
                             socket.emit('newMessageArrived', { chat_messages: chat_messages, chat_uuid: data.chat_uuid, sender_uuid: data.sender_uuid })
@@ -263,6 +260,7 @@ app.post('/submit-chat-attachement', Middlewares.checkAuth, async (req, res) => 
             await knex.raw(query).then(async response => {
                 if (response[0]) {
                     chat_messages = response[0];
+                    console.log('attach',chat_messages);
                     status = 200;
                     message = 'Data has been fetched successfully!'
                     socket.broadcast.emit('newMessageArrived', { chat_messages: chat_messages, chat_uuid: data.chat_uuid, sender_uuid: data.sender_uuid })
@@ -278,12 +276,12 @@ app.post('/submit-chat-attachement', Middlewares.checkAuth, async (req, res) => 
 
 app.use('/api', Router);
 
-app.get('/try', async (req, res) => {
-    await HELPERS.sendMail('mfcoders@gmail.com', 'layout', {
+// app.get('/try', async (req, res) => {
+//     await HELPERS.sendMail('mfcoders@gmail.com', 'layout', {
 
-    }, 'trial').then(response => {
-        console.log(response);
-    }).catch(err => console.log(err))
-})
+//     }, 'trial').then(response => {
+//         console.log(response);
+//     }).catch(err => console.log(err))
+// })
 
 server.listen(port, () => console.log('Port is up', port))

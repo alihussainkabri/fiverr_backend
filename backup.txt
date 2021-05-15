@@ -21,3 +21,18 @@
 </body>
 
 </html>
+
+
+*********** server env
+
+PORT = 3003
+NODE_ENV = development
+APP_NAME = "Fiverr_clone"
+
+CLIENT = mysql
+DB_HOSTNAME = localhost
+DB_DATABASE = kpiqgpjz_fiverr_backend
+DB_USERNAME=kpiqgpjz_admin_fiverr
+DB_PASSWORD=Qw$)GVL]w7vy
+TIME_ZONE = Asia/Kolkata
+APP_URL_REACT = http://localhost:3000/
