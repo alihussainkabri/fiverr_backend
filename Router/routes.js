@@ -4,6 +4,7 @@ const ProfileController = require('../Controllers/ProfileController');
 const GIGController = require('../Controllers/GigController');
 const MessageController = require('../Controllers/MessageController');
 const Middlewares = require('../middlewares/Middlewares');
+const ContractController = require('../Controllers/ContractController');
 
 const router = express.Router();
 
@@ -72,5 +73,12 @@ router.get('/get-gig-list-home',GIGController.getGigListHomePage);
 router.get('/fetch-message-needs',Middlewares.checkAuth,MessageController.fetchMessageNeeds)
 router.post('/submit-message-modal',Middlewares.checkAuth,MessageController.submitMessageModal);
 router.get('/fetch-messages-chatuuid/:uuid',Middlewares.checkAuth,MessageController.fetchMessagesChatUuid);
+
+// Contract Controller
+router.post('/create-contract',Middlewares.checkAuth,ContractController.createContract);
+router.get('/contract-list/:uuid',Middlewares.checkAuth,ContractController.fetchContractList);
+router.get('/contract-detail/:contract_uuid',Middlewares.checkAuth,ContractController.contractDetail);
+router.post('/decline-contract',Middlewares.checkAuth,ContractController.declineContract);
+router.post('/accept-contract',Middlewares.checkAuth,ContractController.acceptContract)
 
 module.exports = router;
