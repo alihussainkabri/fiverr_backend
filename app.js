@@ -276,12 +276,8 @@ app.post('/submit-chat-attachement', Middlewares.checkAuth, async (req, res) => 
 
 app.use('/api', Router);
 
-// app.get('/try', async (req, res) => {
-//     await HELPERS.sendMail('mfcoders@gmail.com', 'layout', {
-
-//     }, 'trial').then(response => {
-//         console.log(response);
-//     }).catch(err => console.log(err))
-// })
+app.use('/',(req,res)=>{
+    return res.send('hy server is up')
+})
 
 server.listen(port, () => console.log('Port is up', port))
