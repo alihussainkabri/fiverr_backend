@@ -172,7 +172,7 @@ router.fetchMessagesChatUuid = async (req, res) => {
     let { uuid } = req.params;
     let chat_messages = [];
 
-    let query = `SELECT messages.id,messages.uuid,messages.chat_uuid,messages.message,messages.attachements,messages.attachement_name,messages.sender_uuid,messages.sender_name,messages.reciever_uuid,messages.reciever_name,messages.status,messages.created_by,messages.created_at,u1.profile_image as sender_image,u2.profile_image as reciever_image FROM messages 
+    let query = `SELECT messages.is_contract,messages.contract_uuid,messages.id,messages.uuid,messages.chat_uuid,messages.message,messages.attachements,messages.attachement_name,messages.sender_uuid,messages.sender_name,messages.reciever_uuid,messages.reciever_name,messages.status,messages.created_by,messages.created_at,u1.profile_image as sender_image,u2.profile_image as reciever_image FROM messages 
     INNER JOIN users u1 on u1.uuid = messages.sender_uuid
     INNER JOIN users u2 on u2.uuid = messages.reciever_uuid
     WHERE messages.chat_uuid = '${uuid}' and messages.status = 1`;

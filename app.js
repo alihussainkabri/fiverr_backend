@@ -276,8 +276,4 @@ app.post('/submit-chat-attachement', Middlewares.checkAuth, async (req, res) => 
 
 app.use('/api', Router);
 
-app.use('/',(req,res)=>{
-    return res.send('hy server is up')
-})
-
 server.listen(port, () => console.log('Port is up', port))

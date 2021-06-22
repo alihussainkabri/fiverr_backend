@@ -29,9 +29,11 @@ router.createContract = async (req, res) => {
             }
         }).catch(err => console.log(err));
 
+        let contract_uuid = await HELPERS.getKnexUuid(knex);
+
         if (Object.keys(acceptor_obj).length > 0) {
             let create_obj = {
-                uuid: await HELPERS.getKnexUuid(knex),
+                uuid: contract_uuid,
                 title: inputs.title,
                 description: inputs.description,
                 price: inputs.price,
@@ -63,6 +65,36 @@ router.createContract = async (req, res) => {
                     }).catch(err => console.log(err))
                 }
             }).catch(err => console.log(err))
+
+            let sub_query = `select * from chats where (person1_uuid='${inputs.creator_uuid}' or person2_uuid='${inputs.creator_uuid}') and (person1_uuid='${inputs.acceptor_uuid}' or person2_uuid='${inputs.acceptor_uuid}') and status=1 `;
+
+            await knex.raw(sub_query).then(async response => {
+                if (response[0].length > 0) {
+                    let chat_uuid = response[0][0].uuid;
+
+                    let message_obj = {
+                        uuid: await HELPERS.getKnexUuid(knex),
+                        chat_uuid,
+                        message: 'Contract has been created',
+                        sender_uuid: inputs.creator_uuid,
+                        sender_name: inputs.creator_name,
+                        reciever_uuid: inputs.acceptor_uuid,
+                        reciever_name: inputs.acceptor_name,
+                        status: 1,
+                        created_by: req.user_data.id,
+                        is_contract: 1,
+                        contract_uuid: contract_uuid,
+                        created_at: HELPERS.datetime()
+                    }
+
+                    await knex('messages').insert(message_obj).then(response => {
+                        if (response) {
+                            status = 200;
+                            message = 'Contract has been updated on the messages successfully!'
+                        }
+                    }).catch(err => console.log(err))
+                }
+            })
         }
     }
 
@@ -77,10 +109,10 @@ router.fetchContractList = async (req, res) => {
     let contract_list = [];
 
     let query = `SELECT * FROM contracts where 
-    (creator_uuid = '${uuid}'  or acceptor_uuid= '${uuid}' )`
+    (creator_uuid = '${uuid}'  or acceptor_uuid= '${uuid}' ) order by id desc`
 
     await knex.raw(query).then(response => {
-        if (response[0].length > 0) {
+        if (response[0]) {
             status = 200;
             message = 'Contracts has been fetched successfully!';
             contract_list = response[0]
@@ -114,16 +146,59 @@ router.declineContract = async (req, res) => {
     let message = 'Oops something went wrong!';
     let inputs = req.body;
 
+    let contract_detail = {};
+
+
+    await knex('contracts').where('uuid', inputs.contract_uuid).then(response => {
+        if (response.length > 0) {
+            contract_detail = response[0];
+        }
+    }).catch(err => console.log(err));
+
     await knex('contracts').where('uuid', inputs.contract_uuid).update({
         rejected_at: HELPERS.datetime(),
         reject_reason: inputs.reason,
         updated_by: req.user_data.id,
         updated_at: HELPERS.datetime(),
-        status : 3
+        status: 3
     }).then(async response => {
         if (response) {
             status = 200;
-            message = 'Contract declined successfully!'
+            message = 'Contract declined successfully!';
+
+            if (Object.keys(contract_detail).length > 0) {
+                let sub_query = `select * from chats where (person1_uuid='${contract_detail.creator_uuid}' or person2_uuid='${contract_detail.creator_uuid}') and (person1_uuid='${contract_detail.acceptor_uuid}' or person2_uuid='${contract_detail.acceptor_uuid}') and status=1 `;
+
+                await knex.raw(sub_query).then(async response => {
+                    if (response[0].length > 0) {
+                        let chat_uuid = response[0][0].uuid;
+
+                        let message_obj = {
+                            uuid: await HELPERS.getKnexUuid(knex),
+                            chat_uuid,
+                            message: `Contract has been declined because ${inputs.reason}`,
+                            sender_uuid: contract_detail.acceptor_uuid,
+                            sender_name: contract_detail.acceptor_name,
+                            reciever_uuid: contract_detail.creator_uuid,
+                            reciever_name: contract_detail.creator_name,
+                            status: 1,
+                            created_by: req.user_data.id,
+                            is_contract: 1,
+                            contract_uuid: contract_detail.uuid,
+                            created_at: HELPERS.datetime()
+                        }
+
+                        await knex('messages').insert(message_obj).then(response => {
+                            if (response) {
+                                status = 200;
+                                message = 'Contract has been updated on the messages successfully!'
+                            }
+                        }).catch(err => console.log(err))
+                    }
+                })
+            }
+
+
             await HELPERS.sendMail(inputs.creator_email, 'decline_contract', {
                 'to_name': inputs.creator_name,
                 'from_name': inputs.acceptor_name
@@ -137,26 +212,67 @@ router.declineContract = async (req, res) => {
                 }
             }).catch(err => console.log(err))
         }
-    }).catch(err=>console.log(err))
+    }).catch(err => console.log(err))
 
-    return res.json({status,message})
+    return res.json({ status, message })
 }
 
 // this below function will used to accept the contract
-router.acceptContract = async (req,res) => {
+router.acceptContract = async (req, res) => {
     let status = 500;
     let message = 'Oops something went wrong!';
     let inputs = req.body;
+
+    let contract_detail = {};
+
+    await knex('contracts').where('uuid', inputs.contract_uuid).then(response => {
+        if (response.length > 0) {
+            contract_detail = response[0];
+        }
+    }).catch(err => console.log(err));
 
     await knex('contracts').where('uuid', inputs.contract_uuid).update({
         accepted_at: HELPERS.datetime(),
         updated_by: req.user_data.id,
         updated_at: HELPERS.datetime(),
-        status : 2
+        status: 2
     }).then(async response => {
         if (response) {
             status = 200;
-            message = 'Contract accepted successfully!'
+            message = 'Contract accepted successfully!';
+
+            if (Object.keys(contract_detail).length > 0) {
+                let sub_query = `select * from chats where (person1_uuid='${contract_detail.creator_uuid}' or person2_uuid='${contract_detail.creator_uuid}') and (person1_uuid='${contract_detail.acceptor_uuid}' or person2_uuid='${contract_detail.acceptor_uuid}') and status=1 `;
+
+                await knex.raw(sub_query).then(async response => {
+                    if (response[0].length > 0) {
+                        let chat_uuid = response[0][0].uuid;
+
+                        let message_obj = {
+                            uuid: await HELPERS.getKnexUuid(knex),
+                            chat_uuid,
+                            message: `Contract has been accepted`,
+                            sender_uuid: contract_detail.acceptor_uuid,
+                            sender_name: contract_detail.acceptor_name,
+                            reciever_uuid: contract_detail.creator_uuid,
+                            reciever_name: contract_detail.creator_name,
+                            status: 1,
+                            created_by: req.user_data.id,
+                            is_contract: 1,
+                            contract_uuid: contract_detail.uuid,
+                            created_at: HELPERS.datetime()
+                        }
+
+                        await knex('messages').insert(message_obj).then(response => {
+                            if (response) {
+                                status = 200;
+                                message = 'Contract has been updated on the messages successfully!'
+                            }
+                        }).catch(err => console.log(err))
+                    }
+                })
+            }
+
             await HELPERS.sendMail(inputs.creator_email, 'accept_contract', {
                 'to_name': inputs.creator_name,
                 'from_name': inputs.acceptor_name
@@ -170,7 +286,121 @@ router.acceptContract = async (req,res) => {
                 }
             }).catch(err => console.log(err))
         }
+    }).catch(err => console.log(err))
+
+    return res.json({ status, message })
+}
+
+// this below route is used to end the contract
+router.endContractPost = async (req,res) =>{
+    let status = 500;
+    let message = 'Oops something went wrong!';
+    let inputs = req.body;
+    let contract_detail_obj = {};
+    console.log(inputs);
+
+    await knex('contracts').where('uuid',inputs.contract_uuid).then(response=>{
+        if (response.length > 0){
+            contract_detail_obj = response[0];
+        }
     }).catch(err=>console.log(err))
+
+    if (Object.keys(contract_detail_obj).length > 0){
+        let update_contract_obj = {
+            cancelled_at : HELPERS.datetime(),
+            cancelled_reason : inputs.reason,
+            completed_feedback : inputs.describe,
+            status : 4,
+            updated_by : req.user_data.id,
+            updated_at : HELPERS.datetime()
+        }
+
+        await knex('contracts').where('uuid',inputs.contract_uuid).update(update_contract_obj).then(async response=>{
+            if (response){
+                status = 200;
+                message = 'Contract has been ended successfully!';
+
+                await HELPERS.sendMail(contract_detail_obj.creator_email, 'end_contract', {
+                    'to_name': contract_detail_obj.creator_name,
+                    'reason' : inputs.reason,
+                    'describe' : inputs.describe,
+                    'title' : contract_detail_obj.title,
+                    'from_name': inputs.acceptor_name,
+                    'ender_name' : req.user_data.username,
+                }, 'Contract has been ended').then(response => {
+                    if (response) {
+                        status = 200;
+                        message = 'Contract ended successfully!'
+                    } else {
+                        status = 200;
+                        message = 'Contract ended successfully!'
+                    }
+                }).catch(err => console.log(err))
+
+                await HELPERS.sendMail(contract_detail_obj.acceptor_email, 'end_contract', {
+                    'to_name': contract_detail_obj.acceptor_name,
+                    'reason' : inputs.reason,
+                    'describe' : inputs.describe,
+                    'title' : contract_detail_obj.title,
+                    'from_name': inputs.creator_name,
+                    'ender_name' : req.user_data.username,
+                }, 'Contract has been ended').then(response => {
+                    if (response) {
+                        status = 200;
+                        message = 'Contract ended successfully!'
+                    } else {
+                        status = 200;
+                        message = 'Contract ended successfully!'
+                    }
+                }).catch(err => console.log(err))
+
+
+                let sub_query = `select * from chats where (person1_uuid='${contract_detail_obj.creator_uuid}' or person2_uuid='${contract_detail_obj.creator_uuid}') and (person1_uuid='${contract_detail_obj.acceptor_uuid}' or person2_uuid='${contract_detail_obj.acceptor_uuid}') and status=1 `;
+
+                await knex.raw(sub_query).then(async response => {
+                    if (response[0].length > 0) {
+                        let chat_uuid = response[0][0].uuid;
+
+                        let reciever_uuid = '';
+                        let reciever_name = '';
+
+                        if (contract_detail_obj.creator_uuid == req.user_data.uuid){
+                            reciever_uuid = contract_detail_obj.acceptor_uuid;
+                            reciever_name = contract_detail_obj.acceptor_name;
+                        }else{
+                            reciever_uuid = contract_detail_obj.creator_uuid;
+                            reciever_name = contract_detail_obj.creator_name;
+                        }
+
+
+                        let message_obj = {
+                            uuid: await HELPERS.getKnexUuid(knex),
+                            chat_uuid,
+                            message: `Contract has been ended`,
+                            sender_uuid: req.user_data.uuid,
+                            sender_name: req.user_data.username,
+                            reciever_uuid: reciever_uuid,
+                            reciever_name: reciever_name,
+                            status: 1,
+                            created_by: req.user_data.id,
+                            is_contract: 1,
+                            contract_uuid: inputs.contract_uuid,
+                            created_at: HELPERS.datetime()
+                        }
+
+                        await knex('messages').insert(message_obj).then(response => {
+                            if (response) {
+                                status = 200;
+                                message = 'Contract has been updated on the messages successfully!'
+                            }
+                        }).catch(err => console.log(err))
+                    }
+                })
+
+            }
+        }).catch(err=>console.log(err))
+
+    }
 
     return res.json({status,message})
 }
