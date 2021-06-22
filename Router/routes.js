@@ -81,5 +81,7 @@ router.get('/contract-detail/:contract_uuid',Middlewares.checkAuth,ContractContr
 router.post('/decline-contract',Middlewares.checkAuth,ContractController.declineContract);
 router.post('/accept-contract',Middlewares.checkAuth,ContractController.acceptContract);
 router.post('/submit-end-contract-form',Middlewares.checkAuth,ContractController.endContractPost);
+router.post('/raise-dispute-contract',Middlewares.checkAuth,ContractController.raiseDisputePost);
+router.post('/submit-dispute-solved',Middlewares.checkAuth,ContractController.submitDisputeSolved);
 
 module.exports = router;
