@@ -5,6 +5,7 @@ const GIGController = require('../Controllers/GigController');
 const MessageController = require('../Controllers/MessageController');
 const Middlewares = require('../middlewares/Middlewares');
 const ContractController = require('../Controllers/ContractController');
+const ContactController = require('../Controllers/ContactController');
 
 const router = express.Router();
 
@@ -83,5 +84,8 @@ router.post('/accept-contract',Middlewares.checkAuth,ContractController.acceptCo
 router.post('/submit-end-contract-form',Middlewares.checkAuth,ContractController.endContractPost);
 router.post('/raise-dispute-contract',Middlewares.checkAuth,ContractController.raiseDisputePost);
 router.post('/submit-dispute-solved',Middlewares.checkAuth,ContractController.submitDisputeSolved);
+
+// contact controller
+router.post('/submit-contact-form',ContactController.contactFormPost);
 
 module.exports = router;
