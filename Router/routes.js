@@ -6,6 +6,7 @@ const MessageController = require('../Controllers/MessageController');
 const Middlewares = require('../middlewares/Middlewares');
 const ContractController = require('../Controllers/ContractController');
 const ContactController = require('../Controllers/ContactController');
+const AdminController = require('../Controllers/AdminController');
 
 const router = express.Router();
 
@@ -87,5 +88,10 @@ router.post('/submit-dispute-solved',Middlewares.checkAuth,ContractController.su
 
 // contact controller
 router.post('/submit-contact-form',ContactController.contactFormPost);
+
+
+
+// admin Routes
+router.get('/admin/dashboard',Middlewares.checkAuth,AdminController.dashboard);
 
 module.exports = router;
