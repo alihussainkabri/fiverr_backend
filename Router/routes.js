@@ -7,6 +7,8 @@ const Middlewares = require('../middlewares/Middlewares');
 const ContractController = require('../Controllers/ContractController');
 const ContactController = require('../Controllers/ContactController');
 const AdminController = require('../Controllers/AdminController');
+const CategoryController = require('../Controllers/CategoryController');
+const SubCategoryController = require('../Controllers/SubCategoryController');
 
 const router = express.Router();
 
@@ -93,5 +95,19 @@ router.post('/submit-contact-form',ContactController.contactFormPost);
 
 // admin Routes
 router.get('/admin/dashboard',Middlewares.checkAuth,AdminController.dashboard);
+
+// Category routes
+router.get('/fetch-categories',Middlewares.checkAuth,CategoryController.list);
+router.post('/create-category',Middlewares.checkAuth,CategoryController.create);
+router.get('/category-detail/:id',Middlewares.checkAuth,CategoryController.getDetailById);
+router.post('/update-category/:id',Middlewares.checkAuth,CategoryController.update);
+router.get('/delete-category/:id',Middlewares.checkAuth,CategoryController.delete);
+
+// sub category routes
+router.get('/fetch-subcategories',Middlewares.checkAuth,SubCategoryController.list);
+router.post('/create-subcategory',Middlewares.checkAuth,SubCategoryController.create);
+router.get('/subcategory-detail/:id',Middlewares.checkAuth,SubCategoryController.getDetailById);
+router.post('/update-subcategory/:id',Middlewares.checkAuth,SubCategoryController.update);
+router.get('/delete-subcategory/:id',Middlewares.checkAuth,SubCategoryController.delete);
 
 module.exports = router;
