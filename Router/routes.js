@@ -102,7 +102,6 @@ router.get('/admin/dashboard',Middlewares.checkAuth,AdminController.dashboard);
 // Category routes
 router.get('/fetch-categories',Middlewares.checkAuth,CategoryController.list);
 router.post('/create-category',Middlewares.checkAuth,CategoryController.create);
-router.get('/category-detail/:id',Middlewares.checkAuth,CategoryController.getDetailById);
 router.post('/update-category/:id',Middlewares.checkAuth,CategoryController.update);
 router.get('/delete-category/:id',Middlewares.checkAuth,CategoryController.delete);
 
@@ -125,7 +124,6 @@ router.get('/delete-language/:id',Middlewares.checkAuth,LanguageController.delet
 // college related routes
 router.get('/fetch-collegesUniversities',Middlewares.checkAuth,CollegeController.list);
 router.post('/create-college',Middlewares.checkAuth,CollegeController.create);
-router.get('/college-detail/:id',Middlewares.checkAuth,CollegeController.getDetailById);
 router.post('/update-college/:id',Middlewares.checkAuth,CollegeController.update);
 router.get('/delete-college/:id',Middlewares.checkAuth,CollegeController.delete);
 

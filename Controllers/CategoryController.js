@@ -53,28 +53,6 @@ router.create = async (req,res) => {
     return res.json({status,message})
 }
 
-// this below function is used to get the deta by id
-router.getDetailById = async (req,res) => {
-    let status = 500;
-    let message = 'Oops something went wrong!';
-    let {id} = req.params;
-    let category_detail = {};
-
-    if (req.user_data.is_admin){
-        await knex('categories').where('id',id).then(response=>{
-            if (response.length > 0){
-                status = 200;
-                message = 'Category detail has been fetched successfully!';
-                category_detail = response[0];
-            }
-        }).catch(err=>console.log(err))
-    }else{
-        status = 401;
-        message = 'You are not logged in as admin'
-    }
-
-    return res.json({status,message,category_detail})
-}
 
 // this below function is used to update
 router.update = async (req,res) => {
