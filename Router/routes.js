@@ -11,6 +11,7 @@ const CategoryController = require('../Controllers/CategoryController');
 const SubCategoryController = require('../Controllers/SubCategoryController');
 const LanguageController = require('../Controllers/LanguageController');
 const CollegeController = require('../Controllers/CollegesController');
+const SkillsController = require('../Controllers/SkillsController');
 
 const router = express.Router();
 
@@ -127,5 +128,13 @@ router.post('/create-college',Middlewares.checkAuth,CollegeController.create);
 router.get('/college-detail/:id',Middlewares.checkAuth,CollegeController.getDetailById);
 router.post('/update-college/:id',Middlewares.checkAuth,CollegeController.update);
 router.get('/delete-college/:id',Middlewares.checkAuth,CollegeController.delete);
+
+// skills related routes
+router.get('/fetch-skills',Middlewares.checkAuth,SkillsController.list);
+router.get('/approve-skill-admin/:id',Middlewares.checkAuth,SkillsController.approveSkill);
+router.post('/reject-skill-admin',Middlewares.checkAuth,SkillsController.rejectSkill);
+router.post('/create-skill-admin',Middlewares.checkAuth,SkillsController.create)
+router.post('/edit-skill-admin/:id',Middlewares.checkAuth,SkillsController.update)
+router.get('/delete-skill-admin/:id',Middlewares.checkAuth,SkillsController.delete)
 
 module.exports = router;
