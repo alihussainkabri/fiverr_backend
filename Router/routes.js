@@ -9,6 +9,8 @@ const ContactController = require('../Controllers/ContactController');
 const AdminController = require('../Controllers/AdminController');
 const CategoryController = require('../Controllers/CategoryController');
 const SubCategoryController = require('../Controllers/SubCategoryController');
+const LanguageController = require('../Controllers/LanguageController');
+const CollegeController = require('../Controllers/CollegesController');
 
 const router = express.Router();
 
@@ -109,5 +111,21 @@ router.post('/create-subcategory',Middlewares.checkAuth,SubCategoryController.cr
 router.get('/subcategory-detail/:id',Middlewares.checkAuth,SubCategoryController.getDetailById);
 router.post('/update-subcategory/:id',Middlewares.checkAuth,SubCategoryController.update);
 router.get('/delete-subcategory/:id',Middlewares.checkAuth,SubCategoryController.delete);
+
+
+// language related routes
+router.get('/fetch-languages',Middlewares.checkAuth,LanguageController.list);
+router.post('/create-language',Middlewares.checkAuth,LanguageController.create);
+router.get('/language-detail/:id',Middlewares.checkAuth,LanguageController.getDetailById);
+router.post('/update-language/:id',Middlewares.checkAuth,LanguageController.update);
+router.get('/delete-language/:id',Middlewares.checkAuth,LanguageController.delete);
+
+
+// college related routes
+router.get('/fetch-collegesUniversities',Middlewares.checkAuth,CollegeController.list);
+router.post('/create-college',Middlewares.checkAuth,CollegeController.create);
+router.get('/college-detail/:id',Middlewares.checkAuth,CollegeController.getDetailById);
+router.post('/update-college/:id',Middlewares.checkAuth,CollegeController.update);
+router.get('/delete-college/:id',Middlewares.checkAuth,CollegeController.delete);
 
 module.exports = router;
