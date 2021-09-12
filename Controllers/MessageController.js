@@ -187,4 +187,29 @@ router.fetchMessagesChatUuid = async (req, res) => {
 
     return res.json({ status, message, chat_messages })
 }
+
+
+// admin chat fetch for the user
+router.fetchTheAdminChat = async (req,res) => {
+    let status = 500;
+    let message = 'Oops something went wrong!';
+    let {uuid} = req.params;
+
+    let chat_list = [];
+
+    let query = `SELECT chats.uuid as chat_uuid,chats.person1_uuid,chats.person2_uuid,chats.person1_name,chats.person2_name,u1.profile_image as person1_profile,u2.profile_image as person2_profile,u1.online_status as person1_status,u2.online_status as person2_status FROM chats
+    INNER JOIN users u1 on u1.uuid = chats.person1_uuid
+    INNER JOIN users u2 on u2.uuid = chats.person2_uuid
+    WHERE (chats.person1_uuid = '${uuid}' OR chats.person2_uuid = '${uuid}') and chats.status = 1 ORDER by chats.updated_at DESC`;
+
+    await knex.raw(query).then(response => {
+        if (response) {
+            chat_list = response[0];
+            status = 200;
+            message = 'Data fetch successfully!';
+        }
+    }).catch(err => console.log(err))
+    return res.json({status,message,chat_list})
+}
+
 module.exports = router;

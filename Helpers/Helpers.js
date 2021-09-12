@@ -59,6 +59,10 @@ function datetime() {
 
 }
 
+function current_date(){
+    return moment.tz(process.env.TIME_ZONE).format("YYYY-MM-DD");
+}
+
 function consoleLog(error) {
     return new Promise(async function (resolve, reject) {
         let path = "./public/logs";
@@ -167,5 +171,6 @@ module.exports = {
     getKnexUuid,
     consoleLog,
     sendMail,
-    grabProfilePercent
+    grabProfilePercent,
+    current_date
 }

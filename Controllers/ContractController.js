@@ -297,7 +297,6 @@ router.endContractPost = async (req,res) =>{
     let message = 'Oops something went wrong!';
     let inputs = req.body;
     let contract_detail_obj = {};
-    console.log(inputs);
 
     await knex('contracts').where('uuid',inputs.contract_uuid).then(response=>{
         if (response.length > 0){
@@ -628,5 +627,26 @@ router.submitDisputeSolved = async (req,res) => {
 
     return res.json({status,message})
 } 
+
+
+// ************************************* this below functionality is for admin panel
+
+// this below function is to get list of contract
+router.adminContractList = async (req,res) => {
+    let status = 500;
+    let message = 'Oops something went wrong!';
+
+    let list= [];
+
+    await knex('contracts').orderBy('id','desc').then(response=>{
+        if (response){
+            status = 200;
+            message = 'Contract list has been fetched successfully!';
+            list = response;
+        }
+    }).catch(err=>console.log(err))
+
+    return res.json({status,message,list})
+}
 
 module.exports = router;
